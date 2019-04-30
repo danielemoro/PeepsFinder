@@ -3,10 +3,10 @@ A bot that automatically finds contact information from the internet.
 The final project for CS 536 Natural Language Processing
 
 You can find videos demonstrating this tool [here](https://youtu.be/eyu2XChnFaQ) and [here](https://youtu.be/5gnSc_UnwoQ)
+A slide deck describing Peeps Finder can be found [here](https://docs.google.com/presentation/d/1EKwgafM0n_7IBOFMByxOKBiCF50Gv93bEc4kCT9tHOQ/edit?usp=sharing)
 
 # Requirements
 - This project has only been tested on a machine running Windows 10 using a GeForce GTX 1080 Graphics Card
-- To install the relationship extraction model
 
 # Installation
 1. Download and set up the code to run the relationship extraction model. 
