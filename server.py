@@ -16,16 +16,11 @@ import_attr = ['email', 'phone', 'occupation', 'position held', 'organization',
                'educated at', 'known for', 'knows', 'country', 'keyword']
 
 # remove these attributes
-blacklist_attr = ['number', 'important date', 'important time', 'family name']  # remove these attributes
+blacklist_attr = ['number', 'important date', 'important time', 'family name']
+
+# These words specify that the user is done validating information.
+# Type these instead of a number to skip the validation step
 end_words = ['end', 'stop', 'done', 'exit']
-
-
-def user_print(string=''):
-    print(string + "\n")
-    if string == '':
-        return
-    with open(output_file, 'a') as f:
-        f.write(string + "\n</br>")
 
 
 def print_attr(name, values, attr_max_len=50):
@@ -197,21 +192,22 @@ def run_session(peeps_finder):
         return
 
 
-last_len = 0
-peeps_finder = PeepsFinder()
-
-# Run indefinitely, as long as the partner web server is running
-while True:
-    # Clear communications channels
+if __name__ == "__main__":
     last_len = 0
-    with open(output_file, 'w') as f:
-        f.write("")
-    with open(input_file, 'w') as f:
-        f.write("")
+    peeps_finder = PeepsFinder()
 
-    print("WAITING FOR NEW SESSION")
-    if user_input().strip().lower() == 'start':
-        print("STARTING SESSION")
-        run_session(peeps_finder)
-    else:
-        print("Error: unexpected input")
+    # Run indefinitely, as long as the partner web server is running
+    while True:
+        # Clear communications channels
+        last_len = 0
+        with open(output_file, 'w') as f:
+            f.write("")
+        with open(input_file, 'w') as f:
+            f.write("")
+
+        print("WAITING FOR NEW SESSION")
+        if user_input().strip().lower() == 'start':
+            print("STARTING SESSION")
+            run_session(peeps_finder)
+        else:
+            print("Error: unexpected input")

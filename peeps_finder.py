@@ -52,15 +52,18 @@ from core import entity_extraction
 keras_models.model_params['wordembeddings'] = root+"/embeddings/glove/glove.6B.50d.txt"
 relparser = RelParser("model_ContextWeighted", models_folder=root+"/trainedmodels/")
 
-# most common words
-# Source: https://github.com/first20hours/google-10000-english
+# Most common english words
 def most_common_words(topn):
+    # Source: https://github.com/first20hours/google-10000-english
     with open("google-10000-english-usa.txt", 'r') as f:
         return [i.replace("\n", "") for i in f.readlines()][:topn]
 common_words = most_common_words(topn=500)
 
-
 class PersonSearcher():
+    """
+    This class searches for web pages about a person on the internet, crawls relevant pages, and stores results to disk
+    """
+
     def __init__(self):
         self.meta_file = "./data/person_searcher_metadata.json"
         metadata = {}
@@ -123,17 +126,25 @@ class PersonSearcher():
         file.write("\n===\n")
         file.write("\n".join(text_bucket))
 
-    def crawl_data(self, search_term, file_name, topn=10):
+    def crawl_data(self, search_term, file_name, topn=20):
         with open(file_name, 'w') as file:
             for url in tqdm([i for i in search(search_term, stop=topn)], "Crawling the internet for {}".format(search_term)):
                 pages = self.find_other_pages(url)
                 [self.parse_link(u, file) for u in pages]
 
 class PeepsFinder:
+    """
+    This class extracts relevant contact attributes from unstructured text found on the internet
+    """
+
     def  __init__(self):
+        # removes the following values from collected data
         self.blacklist = ["view export record dblp key ask others share record short URL", "export record", "url",
                           "Loading","Loading...", "Loading playlists...", "Working...", "...", "id", "zfn", 'loading',
-                          'javascript', 'JavaScript', 'twitter', 'tweet', 'try', 'ob', 'tweeted', 'hmm', 'twitter developer agreement']
+                          'javascript', 'JavaScript', 'twitter', 'tweet', 'try', 'ob', 'tweeted', 'hmm',
+                          'twitter developer agreement']
+
+        # rename the following attributes
         self.ner_types = {"PERSON": 'knows', "NORP": 'nationality', "FAC": 'workplace', "ORG": 'organization',
                           "GPE": 'country', "LOC": 'place', "PRODUCT": 'product', "EVENT": 'event',
                           "WORK_OF_ART": 'known for', "LAW": 'known for', "LANGUAGE": 'speaks',
@@ -142,8 +153,11 @@ class PeepsFinder:
         self.cache = {}
 
     def retrieve_person_data(self, name, search=None, topn=20):
+        # first check the cache
         if (name,search) in self.cache:
             return self.cache[(name,search)]
+
+        # perform a new search
         ps = PersonSearcher()
         recent_data = ps.get_most_recent_data(name)
         if recent_data is None or search is not None:
@@ -152,11 +166,28 @@ class PeepsFinder:
             recent_data = ps.get_most_recent_data(name)
         text, clean_text, docs, sentences = self.parse_data(recent_data)
 
+        # cut off sentences and text that is too long
         sentences = sentences[:10000]
         docs = docs[:1000]
         text = text[:100000]
         clean_text = clean_text[:100000]
 
+        # extract emails and phone numbers using regex
+        emails = [i for i in self.find_emails(text)]
+        phones = [i for i in self.find_phones(text)]
+
+        # get the named entities
+        named_ent = [tuple(i[0].split(': ') + [i[1]]) for i in self.grab_named_entities(clean_text)
+                     if len(i[0].split(': ')[1].strip()) > 0]
+
+        # get the noun phrases
+        noun_phrases = [i[0] for i in self.grab_noun_phrases(clean_text)
+                        if 50 > len(i[0]) > 0 and i[0] not in self.blacklist and i[0] not in common_words][:20]
+
+        # use tfidf to find important words
+        tfidf = list(self.tfidf_keywords(docs, topn=30))
+
+        # extract relevant relationships using the relationship extractor
         rel_res = self.extract_relations(sentences, name)
         rel_dict = collections.defaultdict(list)
         for i in [j[1:] for i in rel_res for j in i]:
@@ -164,15 +195,7 @@ class PeepsFinder:
                 rel_dict[i[0]].append(i[1])
         rel_clean = [(k, v) for k in rel_dict.keys() for v in rel_dict[k]]
 
-        emails = [i for i in self.find_emails(text)]
-        phones = [i for i in self.find_phones(text)]
-
-        named_ent = [tuple(i[0].split(': ') + [i[1]]) for i in self.grab_named_entities(clean_text)
-                     if len(i[0].split(': ')[1].strip())>0]
-        tfidf = list(self.tfidf_keywords(docs, topn=100))
-
-        noun_phrases = [i[0] for i in self.grab_noun_phrases(clean_text)
-                        if 50 > len(i[0]) > 0 and i[0] not in self.blacklist and i[0] not in common_words][:20]
+        # compile everything into one dictionary
         result = {'email': emails,
                 'phone': phones,
                 'rel_extr': rel_clean,
@@ -236,7 +259,6 @@ class PeepsFinder:
             return results
 
         names = name.lower().strip().split(" ") + [name.lower().strip()]
-        #print(names)
         results = []
         for s in tqdm(sentences, desc="Extracting relationships"):
             if replace_i:
@@ -264,8 +286,9 @@ class PeepsFinder:
         np = sorted([(k, v) for k, v in np.items()], key=lambda x: x[1], reverse=True)
         return np
 
-    # Source: https://medium.freecodecamp.org/how-to-extract-keywords-from-text-with-tf-idf-and-pythons-scikit-learn-b2a0f3d7e667
+
     def tfidf_keywords(self, docs, topn=50):
+        # Source: http://kavita-ganesan.com/extracting-keywords-from-text-tfidf/
         cv = CountVectorizer()
         word_count_vector = cv.fit_transform(docs)
         tfidf_transformer = TfidfTransformer(smooth_idf=True, use_idf=True)
@@ -289,10 +312,10 @@ class PeepsFinder:
                 results[feature_vals[idx]] = score_vals[idx]
         return results
 
-    # Source: https://www.regextester.com/19
     def find_emails(self, text):
+        # Source: https://www.regextester.com/19
         return list(re.findall(r"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*", text))
 
-    # Source: http://regexlib.com/REDetails.aspx?regexp_id=45
     def find_phones(self, text):
+        # Source: http://regexlib.com/REDetails.aspx?regexp_id=45
         return ["-".join(i) for i in set(re.findall(r"\D?(\d{3})\D?\D?(\d{3})\D?(\d{4})", text))]

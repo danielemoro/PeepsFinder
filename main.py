@@ -12,7 +12,10 @@ import_attr = ['email', 'phone', 'occupation', 'position held', 'organization',
                'educated at', 'known for', 'knows', 'country', 'keyword']
 
 # remove these attributes
-blacklist_attr = ['number', 'important date', 'important time', 'family name']  # remove these attributes
+blacklist_attr = ['number', 'important date', 'important time', 'family name']
+
+# These words specify that the user is done validating information.
+# Type these instead of a number to skip the validation step
 end_words = ['end', 'stop', 'done', 'exit']
 
 
