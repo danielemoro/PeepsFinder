@@ -5,10 +5,13 @@ A tool for automatically extracting contact attributes from the internet.
 This is the final project for CS 536 Natural Language Processing.
 
 [View the final paper](https://github.com/danielemoro/PeepsFinder/blob/master/PeepsFinderPaper.pdf)
+
 [View the slide deck](https://docs.google.com/presentation/d/1EKwgafM0n_7IBOFMByxOKBiCF50Gv93bEc4kCT9tHOQ/edit?usp=sharing)
 
 Videos demonstrating this tool:
+
 [Video 1](https://youtu.be/eyu2XChnFaQ)
+
 [Video 2](https://youtu.be/5gnSc_UnwoQ)
 
 
