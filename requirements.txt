@@ -252,7 +252,7 @@ regex==2018.1.10
 requests==2.18.4
 responses==0.10.5
 rope==0.10.7
-rsa==3.4.2
+rsa==4.1
 ruamel-yaml==0.15.35
 s3transfer==0.1.13
 scikit-image==0.14.2
