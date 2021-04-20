@@ -198,7 +198,7 @@ preshed==2.0.1
 prompt-toolkit==1.0.15
 protobuf==3.6.1
 psutil==5.4.5
-py==1.5.3
+py==1.10.0
 pyaml==18.11.0
 pyasn1==0.4.5
 pyasn1-modules==0.2.4
