@@ -240,7 +240,7 @@ python-socketio==4.0.0
 pytorch-pretrained-bert==0.6.1
 pytz==2018.9
 PyWavelets==0.5.2
-pywin32==223
+pywin32==301
 pywinpty==0.5.1
 PyYAML==3.12
 pyzmq==17.0.0
