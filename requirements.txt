@@ -60,7 +60,7 @@ datashape==0.5.4
 decorator==4.1.2
 Deprecated==1.2.5
 dill==0.2.9
-distributed==1.21.8
+distributed==2021.10.0
 docker==3.7.0
 docker-pycreds==0.4.0
 docutils==0.14
